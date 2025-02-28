@@ -42,7 +42,7 @@
                 android:gravity="start"
                 android:singleLine="true"
                 android:text="@string/app_name"
-                android:textColor="@color/black"
+                android:textColor="#0070c0"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -54,7 +54,7 @@
                 android:fontFamily="serif"
                 android:gravity="start"
                 android:text="@string/app_name"
-                android:textColor="@color/black"
+                android:textColor="@color/redSubtitle"
                 android:textSize="14sp"
                 android:textStyle="italic" />
 

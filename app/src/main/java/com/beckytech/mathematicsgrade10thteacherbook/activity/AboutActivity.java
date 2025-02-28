@@ -53,9 +53,11 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
     private void allContents() {
         ImageButton back_btn = findViewById(R.id.ib_back);
         back_btn.setOnClickListener(v -> onBackPressed());
-        back_btn.setColorFilter(ContextCompat.getColor(this,R.color.black));
+        back_btn.setColorFilter(ContextCompat.getColor(this,R.color.titleColor));
+
         String str = "About us";
         TextView title = findViewById(R.id.tv_title);
+        title.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
         title.setText(str);
 
         WebView webView = findViewById(R.id.webView);

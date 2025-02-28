@@ -1,7 +1,6 @@
 package com.beckytech.mathematicsgrade10thteacherbook.activity;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -39,7 +38,7 @@ public class BookDetailActivity extends AppCompatActivity {
 
     private void shareBtn() {
         ImageView share_btn = findViewById(R.id.share_btn_image);
-        share_btn.setColorFilter(ContextCompat.getColor(this, R.color.white));
+        share_btn.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
         share_btn.setOnClickListener(view -> {
             String url = "https://play.google.com/store/apps/details?id=";
             Intent intent = new Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
@@ -48,25 +47,26 @@ public class BookDetailActivity extends AppCompatActivity {
                     .setType("text/plain");
             startActivity(Intent.createChooser(intent, "Share with"));
         });
-        share_btn.setColorFilter(ContextCompat.getColor(this, R.color.black));
+        share_btn.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
     }
 
     private void allContents() {
         ImageButton back_btn = findViewById(R.id.back_book_detail);
-        back_btn.setOnClickListener(v -> onBackPressed());
-        back_btn.setColorFilter(ContextCompat.getColor(this, R.color.black));
+        back_btn.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        back_btn.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
 
         Intent intent = getIntent();
         Model model = (Model) intent.getSerializableExtra("data");
 
         TextView title = findViewById(R.id.title_book_detail);
         title.setSelected(true);
+        assert model != null;
         title.setText(model.getTitle());
-        title.setTextColor(Color.BLACK);
+        title.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
 
         TextView subTitle = findViewById(R.id.sub_title_book_detail);
         subTitle.setText(model.getSubTitle());
-        subTitle.setTextColor(Color.BLACK);
+        subTitle.setTextColor(getColor(R.color.redSubtitle));
 
         PDFView pdfView = findViewById(R.id.pdfView);
 

@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageButton;
@@ -28,17 +30,17 @@ public class PrivacyActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     private void allContents() {
         ImageButton ib_back = findViewById(R.id.ib_back);
-        ib_back.setOnClickListener(view -> onBackPressed());
-        ib_back.setColorFilter(ContextCompat.getColor(this, R.color.black));
+        ib_back.setOnClickListener(view -> getOnBackPressedDispatcher().onBackPressed());
+        ib_back.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
         ProgressBar progressBar = findViewById(R.id.progress_horizontal);
         progressBar.setVisibility(View.GONE);
 
         TextView tv_title = findViewById(R.id.tv_title);
         tv_title.setText(R.string.privacy_title);
-        tv_title.setTextColor(ContextCompat.getColor(this, R.color.black));
+        tv_title.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
 
         webView = findViewById(R.id.webView_privacy);
-        webView.loadUrl("https://yoosaad.com/beresa-android-website-privacy-policy/");
+        webView.loadUrl("https://yoosaad.com/privacy/");
         webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
         webView.getSettings().getLoadsImagesAutomatically();
         webView.getSettings().setJavaScriptEnabled(true);
@@ -56,16 +58,11 @@ public class PrivacyActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 webView.loadUrl("file:///android_asset/error.html");
-                progressBar.setVisibility(View.GONE);
+                super.onReceivedError(view, request, error);
             }
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
-    }
 }

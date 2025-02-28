@@ -1,12 +1,12 @@
 package com.beckytech.mathematicsgrade10thteacherbook;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         }
 
         if (item.getItemId() == R.id.action_update) {
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences pref = getSharedPreferences(MainActivity.this.getLocalClassName(), Context.MODE_PRIVATE);
             int lastVersion = pref.getInt("lastVersion", 0);
             String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
             if (lastVersion < BuildConfig.VERSION_CODE) {
@@ -324,11 +324,5 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
                         mInterstitialAd = null;
                     }
                 });
-    }
-
-    @Override
-    public void onBackPressed() {
-        Toast.makeText(this, "Double tab to exit!", Toast.LENGTH_SHORT).show();
-        super.onBackPressed();
     }
 }
