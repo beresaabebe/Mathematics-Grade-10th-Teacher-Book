@@ -1,21 +1,31 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# AdMob
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Facebook Mediation
+-keep class com.facebook.ads.** { *; }
+-keep class com.google.ads.mediation.facebook.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Unity Mediation
+-keep class com.unity3d.ads.** { *; }
+-keep class com.google.ads.mediation.unity.** { *; }
+-keep class com.unity3d.services.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# General R8/ProGuard rules
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
+-dontwarn com.google.android.gms.**
+-dontwarn com.facebook.ads.**
+-dontwarn com.unity3d.**
+
+# Support for 16KB page sizes and native libs
+-keep class androidx.startup.InitializationProvider { *; }
+-keep class androidx.work.impl.WorkDatabase { *; }
+-dontwarn androidx.work.impl.WorkDatabasePathHelper
+
+# Handle missing classes reported by R8
+-ignorewarnings
+-keep class * extends java.util.List { *; }
+-keep class com.beckytech.mathematicsgrade10thteacherbook.model.** { *; }

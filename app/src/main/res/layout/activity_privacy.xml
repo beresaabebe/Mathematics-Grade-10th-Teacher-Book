@@ -48,8 +48,16 @@
         android:id="@+id/webView_privacy"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@id/adView_container"
         android:layout_below="@id/toolbar"
         android:layout_margin="10dp"
+        android:background="@color/white" />
+
+    <FrameLayout
+        android:id="@+id/adView_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:background="@color/white" />
 
     <ProgressBar

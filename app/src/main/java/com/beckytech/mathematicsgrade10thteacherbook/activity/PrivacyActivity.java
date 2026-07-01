@@ -17,15 +17,26 @@ import androidx.core.content.ContextCompat;
 
 import com.beckytech.mathematicsgrade10thteacherbook.R;
 
+import android.widget.FrameLayout;
+import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
+
 public class PrivacyActivity extends AppCompatActivity {
 
     private WebView webView;
+    private AdsManager adsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_privacy);
+        adsManager = new AdsManager();
+        setupAds();
         allContents();
+    }
+
+    private void setupAds() {
+        FrameLayout adContainer = findViewById(R.id.adView_container);
+        adsManager.loadCollapsibleBanner(this, adContainer);
     }
     @SuppressLint("SetJavaScriptEnabled")
     private void allContents() {

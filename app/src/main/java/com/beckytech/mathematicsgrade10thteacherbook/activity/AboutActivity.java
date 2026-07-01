@@ -33,12 +33,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
+
 public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnLinkClicked {
     private final AboutImages images = new AboutImages();
     private final AboutName name = new AboutName();
     private final AboutUrlContents urlContents = new AboutUrlContents();
     List<AboutModel> modelList;
-    private AdView adView;
+    private AdsManager adsManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +48,8 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
         setContentView(R.layout.activity_about);
         MobileAds.initialize(this, initializationStatus -> {
         });
-        adaptiveAds();
+        adsManager = new AdsManager();
+        setupAds();
         allContents();
     }
 
@@ -96,38 +99,9 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
         }
     }
 
-    private void adaptiveAds() {
+    private void setupAds() {
         FrameLayout adContainerView = findViewById(R.id.adView_container);
-        //Create an AdView and put it into your FrameLayout
-        adView = new AdView(this);
-        adContainerView.addView(adView);
-        adView.setAdUnitId(getString(R.string.banner_ad_unit_id));
-        loadBanner();
-    }
-
-    public AdSize getAdSize() {
-        //Determine the screen width to use for the ad width.
-        Display display = getWindowManager().getDefaultDisplay();
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        display.getMetrics(outMetrics);
-
-        float widthPixels = outMetrics.widthPixels;
-        float density = outMetrics.density;
-
-        //you can also pass your selected width here in dp
-        int adWidth = (int) (widthPixels / density);
-
-        //return the optimal size depends on your orientation (landscape or portrait)
-        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
-    }
-
-    public void loadBanner() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        AdSize adSize = getAdSize();
-        // Set the adaptive ad size to the ad view.
-        adView.setAdSize(adSize);
-        // Start loading the ad in the background.
-        adView.loadAd(adRequest);
+        adsManager.loadCollapsibleBanner(this, adContainerView);
     }
 
     @Override
@@ -144,9 +118,6 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
 
     @Override
     protected void onDestroy() {
-        if (adView != null) {
-            adView.destroy();
-        }
         super.onDestroy();
     }
 }

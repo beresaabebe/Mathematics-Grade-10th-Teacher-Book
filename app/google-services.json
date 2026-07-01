@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "242153274242",
+    "project_id": "mathematics-grade-10th",
+    "storage_bucket": "mathematics-grade-10th.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:242153274242:android:ad47bee7e8db35fe17ed9b",
+        "android_client_info": {
+          "package_name": "com.beckytech.mathematicsgrade10thteacherbook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzOK771nP_3_jxdpNDnDth5T80ICHaOlg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

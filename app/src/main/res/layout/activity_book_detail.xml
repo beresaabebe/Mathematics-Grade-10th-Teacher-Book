@@ -23,7 +23,7 @@
             android:contentDescription="@string/app_name"
             android:padding="10dp"
             android:src="@drawable/ic_baseline_arrow_back_24"
-            ads:tint="#FFFFFF" />
+            ads:tint="#0070c0" />
 
         <LinearLayout
             android:id="@+id/title_linear"
@@ -47,8 +47,8 @@
                 android:scrollHorizontally="true"
                 android:singleLine="true"
                 android:text="@string/app_name"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:textColor="#0070c0"
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/sub_title_book_detail"
@@ -60,8 +60,8 @@
                 android:scrollHorizontally="true"
                 android:singleLine="true"
                 android:text="@string/app_name"
-                android:textColor="#EBEBEB"
-                android:textSize="14sp" />
+                android:textColor="#0070c0"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
@@ -74,16 +74,16 @@
             android:padding="10dp"
             android:layout_margin="5dp"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_baseline_share_24" />
+            android:src="@drawable/ic_baseline_share_24"
+            ads:tint="#0070c0" />
 
     </RelativeLayout>
 
-    <com.github.barteksc.pdfviewer.PDFView
-        android:id="@+id/pdfView"
-        android:paddingStart="-5dp"
-        android:paddingEnd="-5dp"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@id/adView_container"
         android:layout_below="@id/toolbar_Rl" />
 
     <FrameLayout
@@ -91,7 +91,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="#FFFFFF"
-        android:orientation="vertical" />
+        android:background="#FFFFFF" />
 
 </RelativeLayout>

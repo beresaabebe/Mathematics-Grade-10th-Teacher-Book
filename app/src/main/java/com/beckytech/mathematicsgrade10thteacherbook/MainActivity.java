@@ -1,9 +1,7 @@
 package com.beckytech.mathematicsgrade10thteacherbook;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,8 +13,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +21,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.beckytech.mathematicsgrade10thteacherbook.activity.AboutActivity;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.BookDetailActivity;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.PrivacyActivity;
@@ -35,7 +30,6 @@ import com.beckytech.mathematicsgrade10thteacherbook.contents.ContentStartPage;
 import com.beckytech.mathematicsgrade10thteacherbook.contents.SubTitleContents;
 import com.beckytech.mathematicsgrade10thteacherbook.contents.TitleContents;
 import com.beckytech.mathematicsgrade10thteacherbook.model.Model;
-import com.github.barteksc.pdfviewer.BuildConfig;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
@@ -47,7 +41,6 @@ import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,18 +54,27 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
     private final SubTitleContents subTitleContents = new SubTitleContents();
     private DrawerLayout drawerLayout;
     private AdView adView;
+    private UpdateManager updateManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_drawer);
 
+        updateManager = new UpdateManager(this);
+        updateManager.checkForUpdates();
+
         AppRate.app_launched(this);
-        MobileAds.initialize(this, initializationStatus -> {
-        });
+        MobileAds.initialize(this, initializationStatus -> {});
         setAds();
         allContents();
         adaptiveAds();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateManager.onResume();
     }
 
     private void allContents() {
@@ -99,10 +101,10 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
 
         ImageView share_btn = menu.findViewById(R.id.share_btn_image);
         share_btn.setOnClickListener(view -> {
-            String url = "https://play.google.com/store/apps/details?id=";
+            String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
             Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain");
             intent.putExtra(Intent.EXTRA_SUBJECT,getString(R.string.app_name))
-                    .putExtra(Intent.EXTRA_TEXT, "Download "+getString(R.string.app_name)+"\n"+url+getPackageName());
+                    .putExtra(Intent.EXTRA_TEXT, "Download "+getString(R.string.app_name)+"\n"+url);
             startActivity(new Intent(Intent.createChooser(intent, "Share with")));
         });
         share_btn.setColorFilter(ContextCompat.getColor(this, R.color.black));
@@ -127,192 +129,102 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
 
     private void adaptiveAds() {
         FrameLayout adContainerView = findViewById(R.id.adView_container);
-        //Create an AdView and put it into your FrameLayout
         adView = new AdView(this);
         adContainerView.addView(adView);
-        adView.setAdUnitId(getString(R.string.banner_ad_unit_id));
+        adView.setAdUnitId(getString(R.string.google_banner_ad_unit_id));
         loadBanner();
     }
 
     public AdSize getAdSize() {
-        //Determine the screen width to use for the ad width.
         Display display = getWindowManager().getDefaultDisplay();
         DisplayMetrics outMetrics = new DisplayMetrics();
         display.getMetrics(outMetrics);
-
         float widthPixels = outMetrics.widthPixels;
         float density = outMetrics.density;
-
-        //you can also pass your selected width here in dp
         int adWidth = (int) (widthPixels / density);
-
-        //return the optimal size depends on your orientation (landscape or portrait)
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
     }
 
     public void loadBanner() {
         AdRequest adRequest = new AdRequest.Builder().build();
         AdSize adSize = getAdSize();
-        // Set the adaptive ad size to the ad view.
         adView.setAdSize(adSize);
-        // Start loading the ad in the background.
         adView.loadAd(adRequest);
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
     void MenuOptions(MenuItem item) {
         drawerLayout.closeDrawer(GravityCompat.START);
-        if (item.getItemId() == R.id.action_privacy)
+        int id = item.getItemId();
+        
+        if (id == R.id.action_privacy) {
             startActivity(new Intent(this, PrivacyActivity.class));
-        if (item.getItemId() == R.id.action_about_us) {
-            if (mInterstitialAd != null) {
-                mInterstitialAd.show(MainActivity.this);
-                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                    @Override
-                    public void onAdDismissedFullScreenContent() {
-                        super.onAdDismissedFullScreenContent();
-
-                        startActivity(new Intent(MainActivity.this, AboutActivity.class));
-                        mInterstitialAd = null;
-                        setAds();
-                    }
-
-                    @Override
-                    public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
-                        // Called when fullscreen content failed to show.
-                        Log.d("TAG", "The ad failed to show.");
-                    }
-
-                    @Override
-                    public void onAdShowedFullScreenContent() {
-                        // Called when fullscreen content is shown.
-                        // Make sure to set your reference to null so you don't
-                        // show it a second time.
-                        mInterstitialAd = null;
-                        Log.d("TAG", "The ad was shown.");
-                    }
-                });
-            } else {
-                startActivity(new Intent(this, AboutActivity.class));
-            }
-        }
-
-        if (item.getItemId() == R.id.action_rate) {
-            String pkg = getPackageName();
-            startActivity(new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://play.google.com/store/apps/details?id=" + pkg)));
-        }
-
-        if (item.getItemId() == R.id.action_more_apps) {
-            if (mInterstitialAd != null) {
-                mInterstitialAd.show(MainActivity.this);
-                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                    @Override
-                    public void onAdDismissedFullScreenContent() {
-                        super.onAdDismissedFullScreenContent();
-                        startActivity(new Intent(Intent.ACTION_VIEW,
-                                Uri.parse("https://play.google.com/store/apps/dev?id=6669279757479011928")));
-                        mInterstitialAd = null;
-                        setAds();
-                    }
-
-                    @Override
-                    public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
-                        // Called when fullscreen content failed to show.
-                        Log.d("TAG", "The ad failed to show.");
-                    }
-
-                    @Override
-                    public void onAdShowedFullScreenContent() {
-                        // Called when fullscreen content is shown.
-                        // Make sure to set your reference to null so you don't
-                        // show it a second time.
-                        mInterstitialAd = null;
-                        Log.d("TAG", "The ad was shown.");
-                    }
-                });
-            } else {
-                startActivity(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("https://play.google.com/store/apps/dev?id=6669279757479011928")));
-            }
-        }
-
-        if (item.getItemId() == R.id.action_share) {
+        } else if (id == R.id.action_about_us) {
+            showInterstitial(() -> startActivity(new Intent(this, AboutActivity.class)));
+        } else if (id == R.id.action_rate) {
+            AppRate.showRateDialog(this, getSharedPreferences("apprater", 0).edit());
+        } else if (id == R.id.action_update) {
+            updateManager.checkForUpdates();
+        } else if (id == R.id.action_more_apps) {
+            showInterstitial(() -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/dev?id=6669279757479011928"))));
+        } else if (id == R.id.action_share) {
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
             String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
             intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
             intent.putExtra(Intent.EXTRA_TEXT, "Download this app from Play store \n" + url);
             startActivity(Intent.createChooser(intent, "Choose to send"));
-        }
-
-        if (item.getItemId() == R.id.action_update) {
-            SharedPreferences pref = getSharedPreferences(MainActivity.this.getLocalClassName(), Context.MODE_PRIVATE);
-            int lastVersion = pref.getInt("lastVersion", 0);
-            String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
-            if (lastVersion < BuildConfig.VERSION_CODE) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                Toast.makeText(this, "New update is available download it from play store!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "No update available!", Toast.LENGTH_SHORT).show();
-            }
-        }
-        if (item.getItemId() == R.id.action_exit) {
-            MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
-            builder.setTitle("Exit")
+        } else if (id == R.id.action_exit) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Exit")
                     .setMessage("Do you want to close?")
                     .setPositiveButton("Yes", (dialog, which) -> {
+                        finishAffinity();
                         System.exit(0);
-                        finish();
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .setBackground(getResources().getDrawable(R.drawable.nav_header_bg, null))
                     .show();
+        }
+    }
+
+    private void showInterstitial(Runnable runnable) {
+        if (mInterstitialAd != null) {
+            mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                @Override
+                public void onAdDismissedFullScreenContent() {
+                    runnable.run();
+                    setAds();
+                }
+
+                @Override
+                public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                    runnable.run();
+                }
+            });
+            mInterstitialAd.show(this);
+        } else {
+            runnable.run();
         }
     }
 
     @Override
     public void clickedBook(Model model) {
+        int position = list.indexOf(model);
+        Intent intent = new Intent(this, BookDetailActivity.class);
+        intent.putExtra("data", (ArrayList<Model>) list);
+        intent.putExtra("pos", position);
+        
         int rand = (int) (Math.random() * 100);
         if (rand % 2 != 0) {
-            if (mInterstitialAd != null) {
-                mInterstitialAd.show(MainActivity.this);
-                mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
-                    @Override
-                    public void onAdDismissedFullScreenContent() {
-                        super.onAdDismissedFullScreenContent();
-                        startActivity(new Intent(MainActivity.this, BookDetailActivity.class).putExtra("data", model));
-                        mInterstitialAd = null;
-                        setAds();
-                    }
-
-                    @Override
-                    public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
-                        // Called when fullscreen content failed to show.
-                        Log.d("TAG", "The ad failed to show.");
-                    }
-
-                    @Override
-                    public void onAdShowedFullScreenContent() {
-                        // Called when fullscreen content is shown.
-                        // Make sure to set your reference to null so you don't
-                        // show it a second time.
-                        mInterstitialAd = null;
-                        Log.d("TAG", "The ad was shown.");
-                    }
-                });
-            } else {
-                startActivity(new Intent(this, BookDetailActivity.class).putExtra("data", model));
-            }
+            showInterstitial(() -> startActivity(intent));
         } else {
-            startActivity(new Intent(this, BookDetailActivity.class).putExtra("data", model));
+            startActivity(intent);
         }
     }
 
     private void setAds() {
         AdRequest adRequest = new AdRequest.Builder().build();
-
-        InterstitialAd.load(this, getString(R.string.test_interstitial_ads_unit_id), adRequest,
+        InterstitialAd.load(this, getString(R.string.google_interstitial_ads_unit_id), adRequest,
                 new InterstitialAdLoadCallback() {
                     @Override
                     public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
