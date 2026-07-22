@@ -18,6 +18,7 @@ public class PdfPagerAdapter extends RecyclerView.Adapter<PdfPagerAdapter.PdfVie
     private final List<Integer> pages;
     private final ParcelFileDescriptor fileDescriptor;
     private PdfRenderer pdfRenderer;
+    private final Object rendererLock = new Object();
 
     public PdfPagerAdapter(List<Integer> pages, ParcelFileDescriptor fileDescriptor) {
         this.pages = pages;
@@ -43,23 +44,26 @@ public class PdfPagerAdapter extends RecyclerView.Adapter<PdfPagerAdapter.PdfVie
     }
 
     private void renderPage(int pageIndex, ImageView imageView) {
-        if (pdfRenderer == null) return;
-        
-        // Adjust page index if necessary (PdfRenderer is 0-indexed)
-        // assuming input pageIndex is 1-indexed as per previous code
-        int index = pageIndex - 1;
-        if (index < 0 || index >= pdfRenderer.getPageCount()) return;
+        synchronized (rendererLock) {
+            if (pdfRenderer == null) return;
 
-        PdfRenderer.Page page = pdfRenderer.openPage(index);
-        
-        // Determine bitmap size. For high quality, we can use a multiple of the page size.
-        int width = imageView.getContext().getResources().getDisplayMetrics().widthPixels;
-        int height = (int) (width * (float) page.getHeight() / page.getWidth());
-        
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-        imageView.setImageBitmap(bitmap);
-        page.close();
+            // Adjust page index if necessary (PdfRenderer is 0-indexed)
+            // assuming input pageIndex is 1-indexed as per previous code
+            int index = pageIndex - 1;
+            if (index < 0 || index >= pdfRenderer.getPageCount()) return;
+
+            try (PdfRenderer.Page page = pdfRenderer.openPage(index)) {
+                // Determine bitmap size. For high quality, we can use a multiple of the page size.
+                int width = imageView.getContext().getResources().getDisplayMetrics().widthPixels;
+                int height = (int) (width * (float) page.getHeight() / page.getWidth());
+
+                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                imageView.setImageBitmap(bitmap);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -70,8 +74,11 @@ public class PdfPagerAdapter extends RecyclerView.Adapter<PdfPagerAdapter.PdfVie
     @Override
     public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
-        if (pdfRenderer != null) {
-            pdfRenderer.close();
+        synchronized (rendererLock) {
+            if (pdfRenderer != null) {
+                pdfRenderer.close();
+                pdfRenderer = null;
+            }
         }
     }
 

@@ -18,6 +18,9 @@ import java.util.List;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.LoadAdError;
 
+import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
+import android.app.Activity;
+
 public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_ITEM = 0;
@@ -25,10 +28,14 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private final List<Model> list;
     private final onBookClicked bookClicked;
+    private final AdsManager adsManager;
+    private final Activity activity;
 
-    public Adapter(List<Model> list, onBookClicked bookClicked) {
+    public Adapter(List<Model> list, onBookClicked bookClicked, Activity activity) {
         this.list = list;
         this.bookClicked = bookClicked;
+        this.activity = activity;
+        this.adsManager = new AdsManager();
     }
 
     public interface onBookClicked {
@@ -49,7 +56,7 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (viewType == TYPE_ITEM) {
             return new ItemViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item, parent, false));
         } else {
-            return new AdViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ad_container, parent, false));
+            return new AdViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ad_container, parent, false), adsManager);
         }
     }
 
@@ -64,7 +71,7 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             itemHolder.itemView.setOnClickListener(v -> bookClicked.clickedBook(model));
         } else {
             AdViewHolder adHolder = (AdViewHolder) holder;
-            adHolder.loadAd();
+            adHolder.loadAd(activity);
         }
     }
 
@@ -88,25 +95,16 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     static class AdViewHolder extends RecyclerView.ViewHolder {
         FrameLayout container;
-        public AdViewHolder(@NonNull View itemView) {
+        AdsManager adsManager;
+        public AdViewHolder(@NonNull View itemView, AdsManager adsManager) {
             super(itemView);
-            container = (FrameLayout) itemView;
+            this.container = (FrameLayout) itemView;
+            this.adsManager = adsManager;
         }
 
-        void loadAd() {
+        void loadAd(Activity activity) {
             if (container.getChildCount() > 0) return;
-            AdView adView = new AdView(container.getContext());
-            adView.setAdUnitId(container.getContext().getString(R.string.google_banner_ad_unit_id));
-            adView.setAdSize(AdSize.BANNER);
-            adView.setAdListener(new AdListener() {
-                @Override
-                public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                    // Fallback or retry logic if needed, but for now we just show banner
-                }
-            });
-            container.removeAllViews();
-            container.addView(adView);
-            adView.loadAd(new AdRequest.Builder().build());
+            adsManager.loadAdWithFallback(activity, container);
         }
     }
 }

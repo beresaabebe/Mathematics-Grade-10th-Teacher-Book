@@ -40,7 +40,9 @@ public class ChapterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<Integer> pages;
     private final ParcelFileDescriptor fileDescriptor;
     private PdfRenderer pdfRenderer;
+    private final Object rendererLock = new Object();
     private final Activity activity;
+    private final AdsManager adsManager;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -48,6 +50,7 @@ public class ChapterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.pages = pages;
         this.fileDescriptor = fileDescriptor;
         this.activity = activity;
+        this.adsManager = new AdsManager();
         try {
             this.pdfRenderer = new PdfRenderer(fileDescriptor);
         } catch (IOException e) {
@@ -84,7 +87,7 @@ public class ChapterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             int pageIndex = getPageIndex(position);
             renderPage(pageIndex, ((PageViewHolder) holder).photoView);
         } else {
-            loadAd((AdViewHolder) holder, getItemViewType(position));
+            loadAd((AdViewHolder) holder);
         }
     }
 
@@ -93,82 +96,40 @@ public class ChapterAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     private void renderPage(int pageIndex, PhotoView photoView) {
-        if (pdfRenderer == null) return;
-        int index = pageIndex - 1;
-        if (index < 0 || index >= pdfRenderer.getPageCount()) return;
+        synchronized (rendererLock) {
+            if (pdfRenderer == null) return;
+            int index = pageIndex - 1;
+            if (index < 0 || index >= pdfRenderer.getPageCount()) return;
 
-        executorService.execute(() -> {
-            try {
-                PdfRenderer.Page page = pdfRenderer.openPage(index);
-                int width = activity.getResources().getDisplayMetrics().widthPixels;
-                int height = (int) (width * (float) page.getHeight() / page.getWidth());
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-                page.close();
-                mainHandler.post(() -> photoView.setImageBitmap(bitmap));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private void loadAd(AdViewHolder holder, int type) {
-        if (holder.container.getChildCount() > 0) return;
-
-        if (type == TYPE_AD_NATIVE) {
-            loadNativeAdWithFallback(holder.container);
-        } else if (type == TYPE_AD_RECTANGLE) {
-            loadMediumRectangle(holder.container);
-        } else {
-            loadBannerAd(holder.container);
+            executorService.execute(() -> {
+                synchronized (rendererLock) {
+                    if (pdfRenderer == null) return;
+                    try (PdfRenderer.Page page = pdfRenderer.openPage(index)) {
+                        int width = activity.getResources().getDisplayMetrics().widthPixels;
+                        int height = (int) (width * (float) page.getHeight() / page.getWidth());
+                        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                        mainHandler.post(() -> photoView.setImageBitmap(bitmap));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
     }
 
-    private void loadNativeAdWithFallback(FrameLayout adContainer) {
-        AdLoader adLoader = new AdLoader.Builder(activity, activity.getString(R.string.google_native_ads_unit_id))
-                .forNativeAd(nativeAd -> {
-                    // Fallback to Medium Rectangle as we haven't implemented Native Ad Layout
-                    loadMediumRectangle(adContainer);
-                })
-                .withAdListener(new AdListener() {
-                    @Override
-                    public void onAdFailedToLoad(@NonNull LoadAdError adError) {
-                        loadMediumRectangle(adContainer);
-                    }
-                })
-                .withNativeAdOptions(new NativeAdOptions.Builder().build())
-                .build();
-        adLoader.loadAd(new AdRequest.Builder().build());
-    }
-
-    private void loadMediumRectangle(FrameLayout adContainer) {
-        AdView adView = new AdView(activity);
-        adView.setAdUnitId(activity.getString(R.string.google_banner_ad_unit_id));
-        adView.setAdSize(AdSize.MEDIUM_RECTANGLE);
-        adView.setAdListener(new AdListener() {
-            @Override
-            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
-                loadBannerAd(adContainer);
-            }
-        });
-        adContainer.removeAllViews();
-        adContainer.addView(adView);
-        adView.loadAd(new AdRequest.Builder().build());
-    }
-
-    private void loadBannerAd(FrameLayout adContainer) {
-        AdView adView = new AdView(activity);
-        adView.setAdUnitId(activity.getString(R.string.google_banner_ad_unit_id));
-        adView.setAdSize(AdSize.BANNER);
-        adContainer.removeAllViews();
-        adContainer.addView(adView);
-        adView.loadAd(new AdRequest.Builder().build());
+    private void loadAd(AdViewHolder holder) {
+        if (holder.container.getChildCount() > 0) return;
+        adsManager.loadAdWithFallback(activity, holder.container);
     }
 
     public void close() {
-        executorService.shutdown();
-        if (pdfRenderer != null) {
-            pdfRenderer.close();
+        executorService.shutdownNow();
+        synchronized (rendererLock) {
+            if (pdfRenderer != null) {
+                pdfRenderer.close();
+                pdfRenderer = null;
+            }
         }
         try {
             if (fileDescriptor != null) {

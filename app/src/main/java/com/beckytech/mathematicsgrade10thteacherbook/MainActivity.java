@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
     private final ContentEndPage endPage = new ContentEndPage();
     private final SubTitleContents subTitleContents = new SubTitleContents();
     private DrawerLayout drawerLayout;
-    private AdView adView;
+    private AdsManager adsManager;
     private UpdateManager updateManager;
 
     @Override
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_drawer);
 
+        adsManager = new AdsManager();
         updateManager = new UpdateManager(this);
         updateManager.checkForUpdates();
 
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         MobileAds.initialize(this, initializationStatus -> {});
         setAds();
         allContents();
-        adaptiveAds();
+        setupAds();
     }
 
     @Override
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         getData();
-        Adapter adapter = new Adapter(list, this);
+        Adapter adapter = new Adapter(list, this, this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -127,29 +128,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         }
     }
 
-    private void adaptiveAds() {
+    private void setupAds() {
         FrameLayout adContainerView = findViewById(R.id.adView_container);
-        adView = new AdView(this);
-        adContainerView.addView(adView);
-        adView.setAdUnitId(getString(R.string.google_banner_ad_unit_id));
-        loadBanner();
-    }
-
-    public AdSize getAdSize() {
-        Display display = getWindowManager().getDefaultDisplay();
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        display.getMetrics(outMetrics);
-        float widthPixels = outMetrics.widthPixels;
-        float density = outMetrics.density;
-        int adWidth = (int) (widthPixels / density);
-        return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(this, adWidth);
-    }
-
-    public void loadBanner() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        AdSize adSize = getAdSize();
-        adView.setAdSize(adSize);
-        adView.loadAd(adRequest);
+        adsManager.loadCollapsibleBanner(this, adContainerView);
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -191,13 +172,20 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         if (mInterstitialAd != null) {
             mInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
+                public void onAdShowedFullScreenContent() {
+                    MyApplication.setFullScreenContentShowing(true);
+                }
+
+                @Override
                 public void onAdDismissedFullScreenContent() {
+                    MyApplication.setFullScreenContentShowing(false);
                     runnable.run();
                     setAds();
                 }
 
                 @Override
                 public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
+                    MyApplication.setFullScreenContentShowing(false);
                     runnable.run();
                 }
             });
@@ -214,8 +202,9 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         intent.putExtra("data", (ArrayList<Model>) list);
         intent.putExtra("pos", position);
         
+        // Show interstitial only 30% of the time to balance revenue and UX
         int rand = (int) (Math.random() * 100);
-        if (rand % 2 != 0) {
+        if (rand < 30) {
             showInterstitial(() -> startActivity(intent));
         } else {
             startActivity(intent);
@@ -233,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
 
                     @Override
                     public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                        Log.e("MainActivity", "Interstitial failed to load: " + loadAdError.getMessage());
                         mInterstitialAd = null;
                     }
                 });

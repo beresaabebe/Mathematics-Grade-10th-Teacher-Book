@@ -8,21 +8,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.viewpager2.widget.ViewPager2;
+import android.widget.Button;
 import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
 import com.beckytech.mathematicsgrade10thteacherbook.R;
-import com.beckytech.mathematicsgrade10thteacherbook.adapter.BookDetailPagerAdapter;
 import com.beckytech.mathematicsgrade10thteacherbook.model.Model;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class BookDetailActivity extends AppCompatActivity {
     private List<Model> models;
     private int currentPos;
-    private ViewPager2 viewPager2;
     private AdsManager adsManager;
     private TextView title, subTitle;
+    private Button btnNext, btnPrevious;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +34,7 @@ public class BookDetailActivity extends AppCompatActivity {
         currentPos = getIntent().getIntExtra("pos", 0);
 
         initViews();
-        setupViewPager();
+        showChapter(currentPos);
         setupAds();
         shareBtn();
     }
@@ -49,39 +46,54 @@ public class BookDetailActivity extends AppCompatActivity {
 
         title = findViewById(R.id.title_book_detail);
         subTitle = findViewById(R.id.sub_title_book_detail);
-        viewPager2 = findViewById(R.id.viewPager2);
+        
+        btnNext = findViewById(R.id.btn_next);
+        btnPrevious = findViewById(R.id.btn_previous);
+        
+        btnNext.setOnClickListener(v -> navigateNext());
+        btnPrevious.setOnClickListener(v -> navigatePrevious());
     }
 
-    private void setupViewPager() {
-        BookDetailPagerAdapter adapter = new BookDetailPagerAdapter(this, models);
-        viewPager2.setAdapter(adapter);
-        viewPager2.setCurrentItem(currentPos, false);
-        updateTitle(currentPos);
+    private int transitionCount = 0;
 
-        viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                updateTitle(position);
-                showRandomRewardedAd();
-            }
-        });
+    private void navigateNext() {
+        if (currentPos < models.size() - 1) {
+            currentPos++;
+            transitionCount++;
+            adsManager.showRewardedInterstitialAd(this, () -> {
+                showChapter(currentPos);
+                // Refresh collapsible banner every 5 transitions to trigger high-revenue "expansion"
+                if (transitionCount % 5 == 0) {
+                    setupAds();
+                }
+            });
+        }
+    }
+
+    private void navigatePrevious() {
+        if (currentPos > 0) {
+            currentPos--;
+            showChapter(currentPos);
+        }
+    }
+
+    private void showChapter(int position) {
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, ChapterFragment.newInstance(models.get(position)))
+                .commit();
+        updateTitle(position);
+        updateButtonVisibility();
+    }
+
+    private void updateButtonVisibility() {
+        btnPrevious.setEnabled(currentPos > 0);
+        btnNext.setEnabled(currentPos < models.size() - 1);
     }
 
     private void updateTitle(int position) {
         Model model = models.get(position);
         title.setText(model.getTitle());
         subTitle.setText(model.getSubTitle());
-    }
-
-    private void showRandomRewardedAd() {
-        Random random = new Random();
-        int rand = random.nextInt(100);
-        if (rand % 2 == 0) {
-            adsManager.showRewardedAd(this);
-        } else {
-            adsManager.showRewardedInterstitialAd(this);
-        }
     }
 
     private void setupAds() {
