@@ -10,9 +10,11 @@ import androidx.annotation.NonNull;
 
 import android.util.Log;
 import com.google.ads.mediation.admob.AdMobAdapter;
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
@@ -30,12 +32,18 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import com.google.android.gms.ads.nativead.MediaView;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class AdsManager {
 
     private RewardedAd rewardedAd;
     private RewardedInterstitialAd rewardedInterstitialAd;
     private static final String TAG = "AdsManager";
+
+    @Inject
+    public AdsManager() {}
 
     public void loadAdWithFallback(Activity activity, FrameLayout adContainer) {
         Log.d(TAG, "Starting ad fallback sequence: Native -> Rectangle -> Banner");
@@ -227,7 +235,7 @@ public class AdsManager {
 
     public void showRewardedAd(Activity activity, Runnable onAdDismissed) {
         if (rewardedAd != null) {
-            rewardedAd.setFullScreenContentCallback(new com.google.android.gms.ads.FullScreenContentCallback() {
+            rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdShowedFullScreenContent() {
                     MyApplication.setFullScreenContentShowing(true);
@@ -241,7 +249,7 @@ public class AdsManager {
                 }
 
                 @Override
-                public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
                     MyApplication.setFullScreenContentShowing(false);
                     if (onAdDismissed != null) onAdDismissed.run();
                 }
@@ -256,7 +264,7 @@ public class AdsManager {
 
     public void showRewardedInterstitialAd(Activity activity, Runnable onAdDismissed) {
         if (rewardedInterstitialAd != null) {
-            rewardedInterstitialAd.setFullScreenContentCallback(new com.google.android.gms.ads.FullScreenContentCallback() {
+            rewardedInterstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
                 public void onAdShowedFullScreenContent() {
                     MyApplication.setFullScreenContentShowing(true);
@@ -270,7 +278,7 @@ public class AdsManager {
                 }
 
                 @Override
-                public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError adError) {
+                public void onAdFailedToShowFullScreenContent(@NonNull AdError adError) {
                     MyApplication.setFullScreenContentShowing(false);
                     if (onAdDismissed != null) onAdDismissed.run();
                 }

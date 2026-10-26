@@ -14,7 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:extractNativeLibs="true">
+        android:extractNativeLibs="false">
 
         <activity
             android:name=".activity.BookDetailActivity"
@@ -43,10 +43,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
+        <!-- Sample AdMob app ID for Sanitization -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-8504401574247581~7531967787" />
+            android:value="ca-app-pub-3940256099942544~3347511713" />
 
         <service
             android:name=".MyFirebaseMessagingService"

@@ -5,61 +5,63 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.AboutActivity;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.BookDetailActivity;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.PrivacyActivity;
 import com.beckytech.mathematicsgrade10thteacherbook.adapter.Adapter;
-import com.beckytech.mathematicsgrade10thteacherbook.contents.ContentEndPage;
-import com.beckytech.mathematicsgrade10thteacherbook.contents.ContentStartPage;
-import com.beckytech.mathematicsgrade10thteacherbook.contents.SubTitleContents;
-import com.beckytech.mathematicsgrade10thteacherbook.contents.TitleContents;
+import com.beckytech.mathematicsgrade10thteacherbook.databinding.ActivityMainDrawerBinding;
 import com.beckytech.mathematicsgrade10thteacherbook.model.Model;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.navigation.NavigationView;
 import java.util.ArrayList;
 import java.util.List;
+import androidx.lifecycle.ViewModelProvider;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class MainActivity extends AppCompatActivity implements Adapter.onBookClicked {
 
     private InterstitialAd mInterstitialAd;
     private final List<Model> list = new ArrayList<>();
-    private final ContentStartPage startPage = new ContentStartPage();
-    private final TitleContents titleContents = new TitleContents();
-    private final ContentEndPage endPage = new ContentEndPage();
-    private final SubTitleContents subTitleContents = new SubTitleContents();
-    private DrawerLayout drawerLayout;
+    private ActivityMainDrawerBinding binding;
     private AdsManager adsManager;
     private UpdateManager updateManager;
+    private MainViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_drawer);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        binding = ActivityMainDrawerBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.drawerLayout, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         adsManager = new AdsManager();
         updateManager = new UpdateManager(this);
@@ -79,33 +81,30 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
     }
 
     private void allContents() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitleTextColor(Color.BLACK);
-        setSupportActionBar(toolbar);
+        binding.toolbar.setTitleTextColor(Color.BLACK);
+        setSupportActionBar(binding.toolbar);
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.app_name, R.string.app_name);
+        ActionBarDrawerToggle drawerToggle = new ActionBarDrawerToggle(this, binding.drawerLayout, binding.toolbar, R.string.app_name, R.string.app_name);
         drawerToggle.syncState();
         drawerToggle.getDrawerArrowDrawable().setColor(Color.BLACK);
-        drawerLayout.addDrawerListener(drawerToggle);
+        binding.drawerLayout.addDrawerListener(drawerToggle);
 
-        NavigationView navigationView = findViewById(R.id.navigationView);
-        navigationView.setNavigationItemSelectedListener(item -> {
+        binding.navigationView.setNavigationItemSelectedListener(item -> {
             MenuOptions(item);
             return true;
         });
 
-        View menu = navigationView.getHeaderView(0);
+        View menu = binding.navigationView.getHeaderView(0);
         ImageView back_btn = menu.findViewById(R.id.back_btn_image);
-        back_btn.setOnClickListener(view -> drawerLayout.closeDrawer(GravityCompat.START));
-        back_btn.setColorFilter(ContextCompat.getColor(this,R.color.black));
+        back_btn.setOnClickListener(view -> binding.drawerLayout.closeDrawer(GravityCompat.START));
+        back_btn.setColorFilter(ContextCompat.getColor(this, R.color.black));
 
         ImageView share_btn = menu.findViewById(R.id.share_btn_image);
         share_btn.setOnClickListener(view -> {
             String url = "https://play.google.com/store/apps/details?id=" + getPackageName();
             Intent intent = new Intent(Intent.ACTION_SEND).setType("text/plain");
-            intent.putExtra(Intent.EXTRA_SUBJECT,getString(R.string.app_name))
-                    .putExtra(Intent.EXTRA_TEXT, "Download "+getString(R.string.app_name)+"\n"+url);
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
+                    .putExtra(Intent.EXTRA_TEXT, "Download " + getString(R.string.app_name) + "\n" + url);
             startActivity(new Intent(Intent.createChooser(intent, "Share with")));
         });
         share_btn.setColorFilter(ContextCompat.getColor(this, R.color.black));
@@ -113,29 +112,26 @@ public class MainActivity extends AppCompatActivity implements Adapter.onBookCli
         TextView nav_title = menu.findViewById(R.id.tv_title);
         nav_title.setTextColor(Color.BLACK);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        getData();
+        RecyclerView recyclerView = binding.mainContent.recyclerView;
         Adapter adapter = new Adapter(list, this, this);
         recyclerView.setAdapter(adapter);
-    }
 
-    private void getData() {
-        for (int i = 0; i < titleContents.title.length; i++) {
-            list.add(new Model(titleContents.title[i],
-                    subTitleContents.subTitle[i],
-                    startPage.pageStart[i],
-                    endPage.pageEnd[i]));
-        }
+        viewModel.getChapters().observe(this, chapters -> {
+            if (chapters != null) {
+                list.clear();
+                list.addAll(chapters);
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void setupAds() {
-        FrameLayout adContainerView = findViewById(R.id.adView_container);
-        adsManager.loadCollapsibleBanner(this, adContainerView);
+        adsManager.loadCollapsibleBanner(this, binding.mainContent.adViewContainer);
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
     void MenuOptions(MenuItem item) {
-        drawerLayout.closeDrawer(GravityCompat.START);
+        binding.drawerLayout.closeDrawer(GravityCompat.START);
         int id = item.getItemId();
         
         if (id == R.id.action_privacy) {

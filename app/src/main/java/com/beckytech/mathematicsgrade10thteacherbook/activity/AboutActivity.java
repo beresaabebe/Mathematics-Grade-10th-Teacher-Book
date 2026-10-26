@@ -5,78 +5,76 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.view.Display;
-import android.webkit.WebView;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
+import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
 import com.beckytech.mathematicsgrade10thteacherbook.R;
 import com.beckytech.mathematicsgrade10thteacherbook.adapter.AboutAdapter;
 import com.beckytech.mathematicsgrade10thteacherbook.contents.AboutImages;
 import com.beckytech.mathematicsgrade10thteacherbook.contents.AboutName;
 import com.beckytech.mathematicsgrade10thteacherbook.contents.AboutUrlContents;
+import com.beckytech.mathematicsgrade10thteacherbook.databinding.ActivityAboutBinding;
 import com.beckytech.mathematicsgrade10thteacherbook.model.AboutModel;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnLinkClicked {
     private final AboutImages images = new AboutImages();
     private final AboutName name = new AboutName();
     private final AboutUrlContents urlContents = new AboutUrlContents();
     List<AboutModel> modelList;
     private AdsManager adsManager;
+    private ActivityAboutBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_about);
-        MobileAds.initialize(this, initializationStatus -> {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        binding = ActivityAboutBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
         });
+
+        MobileAds.initialize(this, initializationStatus -> {});
         adsManager = new AdsManager();
         setupAds();
         allContents();
     }
 
     private void allContents() {
-        ImageButton back_btn = findViewById(R.id.ib_back);
-        back_btn.setOnClickListener(v -> onBackPressed());
-        back_btn.setColorFilter(ContextCompat.getColor(this,R.color.titleColor));
+        binding.ibBack.setOnClickListener(v -> onBackPressed());
+        binding.ibBack.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
 
         String str = "About us";
-        TextView title = findViewById(R.id.tv_title);
-        title.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
-        title.setText(str);
+        binding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
+        binding.tvTitle.setText(str);
 
-        WebView webView = findViewById(R.id.webView);
-        webView.loadUrl("file:///android_asset/about.html");
+        binding.webView.loadUrl("file:///android_asset/about.html");
 
-        TextView version = findViewById(R.id.version_tv);
         try {
-            PackageInfo info = getPackageManager().getPackageInfo(getBaseContext().getPackageName(),0);
-            version.setText(String.format(Locale.ENGLISH, " %s", info.versionName));
-        }
-        catch (PackageManager.NameNotFoundException e) {
+            PackageInfo info = getPackageManager().getPackageInfo(getBaseContext().getPackageName(), 0);
+            binding.versionTv.setText(String.format(Locale.ENGLISH, " %s", info.versionName));
+        } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
 
-        ImageView imageView = findViewById(R.id.imageView);
-        imageView.setOnClickListener(view -> {
+        binding.imageView.setOnClickListener(view -> {
             Toast.makeText(AboutActivity.this, "Share me, let other know about me!", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setType("text/plain");
@@ -85,23 +83,20 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
             startActivity(Intent.createChooser(intent, "Share me via "));
         });
 
-        RecyclerView recyclerView = findViewById(R.id.recycler_about);
         getData();
         AboutAdapter adapter = new AboutAdapter(modelList, this);
-        recyclerView.setAdapter(adapter);
+        binding.recyclerAbout.setAdapter(adapter);
     }
 
     private void getData() {
         modelList = new ArrayList<>();
         for (int i = 0; i < name.name.length; i++) {
-            modelList.add(new AboutModel(images.images[i],
-                    name.name[i], urlContents.url[i]));
+            modelList.add(new AboutModel(images.images[i], name.name[i], urlContents.url[i]));
         }
     }
 
     private void setupAds() {
-        FrameLayout adContainerView = findViewById(R.id.adView_container);
-        adsManager.loadCollapsibleBanner(this, adContainerView);
+        adsManager.loadCollapsibleBanner(this, binding.adViewContainer);
     }
 
     @Override
@@ -109,15 +104,5 @@ public class AboutActivity extends AppCompatActivity implements AboutAdapter.OnL
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(model.getUrl()));
         startActivity(intent);
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 }

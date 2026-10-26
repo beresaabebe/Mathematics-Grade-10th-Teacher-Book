@@ -8,72 +8,78 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ImageButton;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
-import com.beckytech.mathematicsgrade10thteacherbook.R;
-
-import android.widget.FrameLayout;
 import com.beckytech.mathematicsgrade10thteacherbook.AdsManager;
+import com.beckytech.mathematicsgrade10thteacherbook.R;
+import com.beckytech.mathematicsgrade10thteacherbook.databinding.ActivityPrivacyBinding;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class PrivacyActivity extends AppCompatActivity {
 
-    private WebView webView;
     private AdsManager adsManager;
+    private ActivityPrivacyBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_privacy);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        binding = ActivityPrivacyBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+
         adsManager = new AdsManager();
         setupAds();
         allContents();
     }
 
     private void setupAds() {
-        FrameLayout adContainer = findViewById(R.id.adView_container);
-        adsManager.loadCollapsibleBanner(this, adContainer);
+        adsManager.loadCollapsibleBanner(this, binding.adViewContainer);
     }
+
     @SuppressLint("SetJavaScriptEnabled")
     private void allContents() {
-        ImageButton ib_back = findViewById(R.id.ib_back);
-        ib_back.setOnClickListener(view -> getOnBackPressedDispatcher().onBackPressed());
-        ib_back.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
-        ProgressBar progressBar = findViewById(R.id.progress_horizontal);
-        progressBar.setVisibility(View.GONE);
+        binding.ibBack.setOnClickListener(view -> getOnBackPressedDispatcher().onBackPressed());
+        binding.ibBack.setColorFilter(ContextCompat.getColor(this, R.color.titleColor));
+        binding.progressHorizontal.setVisibility(View.GONE);
 
-        TextView tv_title = findViewById(R.id.tv_title);
-        tv_title.setText(R.string.privacy_title);
-        tv_title.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
+        binding.tvTitle.setText(R.string.privacy_title);
+        binding.tvTitle.setTextColor(ContextCompat.getColor(this, R.color.titleColor));
 
-        webView = findViewById(R.id.webView_privacy);
-        webView.loadUrl("https://yoosaad.com/privacy/");
-        webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-        webView.getSettings().getLoadsImagesAutomatically();
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.setWebViewClient(new WebViewClient(){
+        binding.webViewPrivacy.loadUrl("https://yoosaad.com/privacy/");
+        binding.webViewPrivacy.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        binding.webViewPrivacy.getSettings().getLoadsImagesAutomatically();
+        binding.webViewPrivacy.getSettings().setJavaScriptEnabled(true);
+        binding.webViewPrivacy.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                progressBar.setVisibility(View.VISIBLE);
+                binding.progressHorizontal.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                progressBar.setVisibility(View.GONE);
+                binding.progressHorizontal.setVisibility(View.GONE);
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                webView.loadUrl("file:///android_asset/error.html");
+                binding.webViewPrivacy.loadUrl("file:///android_asset/error.html");
                 super.onReceivedError(view, request, error);
             }
         });
     }
-
 }

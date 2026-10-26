@@ -9,14 +9,18 @@ import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import android.util.Log;
+
+import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.appopen.AppOpenAd;
 import com.beckytech.mathematicsgrade10thteacherbook.activity.SplashActivity;
+import dagger.hilt.android.HiltAndroidApp;
 import java.util.Date;
 
+@HiltAndroidApp
 public class MyApplication extends Application implements Application.ActivityLifecycleCallbacks, DefaultLifecycleObserver {
 
     private AppOpenAdManager appOpenAdManager;
@@ -148,7 +152,7 @@ public class MyApplication extends Application implements Application.ActivityLi
                         }
 
                         @Override
-                        public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError adError) {
+                        public void onAdFailedToShowFullScreenContent(AdError adError) {
                             appOpenAd = null;
                             isShowingAd = false;
                             isFullScreenContentShowing = false;

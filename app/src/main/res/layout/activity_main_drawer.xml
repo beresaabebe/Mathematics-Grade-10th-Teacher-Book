@@ -30,7 +30,9 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <include layout="@layout/activity_main" />
+        <include
+            android:id="@+id/main_content"
+            layout="@layout/activity_main" />
 
     </LinearLayout>
 

@@ -15,11 +15,12 @@
     <string name="privacy_title">Privacy</string>
     <string name="contact_us">Contact us</string>
 
-    <string name="google_banner_ad_unit_id" translatable="false">ca-app-pub-8504401574247581/4403241565</string>
-    <string name="google_interstitial_ads_unit_id" translatable="false">ca-app-pub-8504401574247581/7793807766</string>
-    <string name="google_app_open_ads_unit_id" translatable="false">ca-app-pub-8504401574247581/8978922454</string>
-    <string name="google_rewarded_ads_unit_id" translatable="false">ca-app-pub-8504401574247581/9098341959</string>
-    <string name="google_rewarded_interstitial_ads_unit_id" translatable="false">ca-app-pub-8504401574247581/8763300032</string>
-    <string name="google_native_ads_unit_id" translatable="false">ca-app-pub-8504401574247581/7726349299</string>
+        <!-- Official Google AdMob Test Ad Unit IDs for Sanitization -->
+    <string name="google_banner_ad_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="google_interstitial_ads_unit_id" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="google_app_open_ads_unit_id" translatable="false">ca-app-pub-3940256099942544/9257395921</string>
+    <string name="google_rewarded_ads_unit_id" translatable="false">ca-app-pub-3940256099942544/5224354917</string>
+    <string name="google_rewarded_interstitial_ads_unit_id" translatable="false">ca-app-pub-3940256099942544/5354046379</string>
+    <string name="google_native_ads_unit_id" translatable="false">ca-app-pub-3940256099942544/2247696110</string>
 
 </resources>

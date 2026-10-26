@@ -10,9 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.beckytech.mathematicsgrade10thteacherbook.R;
 import com.beckytech.mathematicsgrade10thteacherbook.adapter.ChapterAdapter;
+import com.beckytech.mathematicsgrade10thteacherbook.databinding.FragmentChapterBinding;
 import com.beckytech.mathematicsgrade10thteacherbook.model.Model;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +24,8 @@ public class ChapterFragment extends Fragment {
 
     private static final String ARG_MODEL = "model";
     private Model model;
+    private FragmentChapterBinding binding;
+    private ChapterAdapter adapter;
 
     public static ChapterFragment newInstance(Model model) {
         ChapterFragment fragment = new ChapterFragment();
@@ -42,29 +43,28 @@ public class ChapterFragment extends Fragment {
         }
     }
 
-    private ChapterAdapter adapter;
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_chapter, container, false);
-        RecyclerView recyclerView = view.findViewById(R.id.chapterRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        binding = FragmentChapterBinding.inflate(inflater, container, false);
+        binding.chapterRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         List<Integer> pages = new ArrayList<>();
-        for (int i = model.getStartPage(); i <= model.getEndPage(); i++) {
-            pages.add(i);
+        if (model != null) {
+            for (int i = model.getStartPage(); i <= model.getEndPage(); i++) {
+                pages.add(i);
+            }
         }
 
         try {
             ParcelFileDescriptor pfd = getParcelFileDescriptorFromAssets("maths.pdf");
             adapter = new ChapterAdapter(pages, pfd, getActivity());
-            recyclerView.setAdapter(adapter);
+            binding.chapterRecyclerView.setAdapter(adapter);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return view;
+        return binding.getRoot();
     }
 
     @Override
@@ -73,6 +73,7 @@ public class ChapterFragment extends Fragment {
         if (adapter != null) {
             adapter.close();
         }
+        binding = null;
     }
 
     private ParcelFileDescriptor getParcelFileDescriptorFromAssets(String assetName) throws IOException {

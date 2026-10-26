@@ -7,15 +7,21 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.beckytech.mathematicsgrade10thteacherbook.MainActivity;
-import com.beckytech.mathematicsgrade10thteacherbook.R;
+import com.beckytech.mathematicsgrade10thteacherbook.databinding.ActivitySplashBinding;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 @SuppressLint("CustomSplashScreen")
 public class SplashActivity extends AppCompatActivity {
+
+    private ActivitySplashBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
+        binding = ActivitySplashBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
         startActivity(new Intent(SplashActivity.this, MainActivity.class));
         finish();
     }
